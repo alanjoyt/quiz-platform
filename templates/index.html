@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+
+{% block title %}Welcome — Cheranalloor Faces{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <h1 class="hero-title">Cheranalloor Faces</h1>
+    <p class="hero-subtitle">The official live community quiz competition. Register today, test your speed and precision, and rise to the top of the leaderboard!</p>
+</div>
+
+<!-- Quiz Status Card -->
+<div class="card" style="text-align: center; border-color: var(--primary-accent);">
+    <h2 class="card-title" style="color: var(--primary-accent);">Competition Status</h2>
+    
+    {% if quiz_settings.state == 'live' %}
+        <p style="margin-bottom: 1rem; font-weight: 600; font-size: 1.1rem; color: var(--success-color);">
+            ● The Quiz is LIVE now!
+        </p>
+        <p style="margin-bottom: 1.5rem;">Answer the questions as fast as possible to claim the top spot.</p>
+        {% if current_user.is_authenticated %}
+            {% if user_state and user_state.quiz_completed_at %}
+                <a href="{{ url_for('profile') }}" class="btn btn-secondary">View Your Performance</a>
+            {% elif user_state and user_state.is_disqualified %}
+                <div class="alert alert-danger" style="margin-bottom: 0;">You have been disqualified.</div>
+            {% else %}
+                <a href="{{ url_for('quiz_view') }}" class="btn btn-primary">Enter Quiz Room</a>
+            {% endif %}
+        {% else %}
+            <a href="{{ url_for('auth.login') }}" class="btn btn-primary">Login to Participate</a>
+        {% endif %}
+        
+    {% elif quiz_settings.state == 'registration' %}
+        <p style="margin-bottom: 0.5rem; font-weight: 600; font-size: 1.1rem; color: var(--secondary-accent);">
+            Registration is OPEN
+        </p>
+        
+        {% if quiz_settings.start_time %}
+            <p style="font-size: 0.9rem; color: var(--text-muted);">Quiz starts on: {{ quiz_settings.start_time | datetimeformat }}</p>
+            
+            <!-- Live Countdown Timer -->
+            <div class="countdown-box">
+                <p style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">Starts In</p>
+                <div id="index-countdown" class="countdown-timer-display" data-target="{{ quiz_settings.start_time.isoformat() }}">--:--:--</div>
+            </div>
+        {% else %}
+            <p style="margin-bottom: 1.5rem;">Quiz start time will be announced shortly.</p>
+        {% endif %}
+        
+        {% if current_user.is_authenticated %}
+            <div class="alert alert-success" style="margin-bottom: 0; text-align: left;">
+                ✓ You are registered! You will be able to take the quiz when the timer expires and the administrator starts the event.
+            </div>
+        {% else %}
+            <a href="{{ url_for('auth.login') }}" class="btn btn-primary">Register Now</a>
+        {% endif %}
+        
+    {% elif quiz_settings.state == 'ended' %}
+        <p style="margin-bottom: 1rem; font-weight: 600; font-size: 1.1rem; color: var(--text-muted);">
+            Quiz Competition Finished
+        </p>
+        <p style="margin-bottom: 1.5rem;">The answers have been recorded and the final scores are computed.</p>
+        <a href="{{ url_for('leaderboard') }}" class="btn btn-secondary">View Leaderboard Winners</a>
+        
+    {% else %}
+        <p style="margin-bottom: 1rem; font-weight: 600; font-size: 1.1rem; color: var(--text-muted);">
+            Quiz Inactive
+        </p>
+        <p style="margin-bottom: 1.5rem;">Stay tuned for the upcoming quiz schedule!</p>
+        <a href="{{ url_for('leaderboard') }}" class="btn btn-outline">Check Past Rankings</a>
+    {% endif %}
+</div>
+
+<!-- Competition Rules -->
+<div class="card">
+    <h3 class="card-title">Competition Rules</h3>
+    <ul class="rules-list">
+        <li><strong>PIN Gated Registration:</strong> Competitors register with a unique Username, PIN, and Email or Phone Number.</li>
+        <li><strong>Strict Timers:</strong> You have a limit of <strong>{{ quiz_settings.time_limit_sec }} seconds</strong> per question. Remaining seconds add to your speed bonus points.</li>
+        <li><strong>One Attempt Only:</strong> Once you submit an answer or the timer runs out, you advance immediately. Browsing back is blocked.</li>
+        <li><strong>Anti-Cheat Systems:</strong> Switching tabs or opening external applications during the quiz will issue warnings. Exceeding 3 warnings results in <strong>automatic disqualification</strong>.</li>
+        <li><strong>No Clutter:</strong> Minimal layout optimized specifically for mobile screens for maximum readability.</li>
+    </ul>
+</div>
+
+<!-- Competition Stats -->
+<div class="profile-stats">
+    <div class="profile-stat-box">
+        <span class="profile-stat-label">Total Participants</span>
+        <span class="profile-stat-value">{{ total_users }}</span>
+    </div>
+    <div class="profile-stat-box">
+        <span class="profile-stat-label">Total Questions</span>
+        <span class="profile-stat-value">{{ total_questions }}</span>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const countdownEl = document.getElementById('index-countdown');
+        if (!countdownEl) return;
+        
+        const targetStr = countdownEl.dataset.target;
+        if (!targetStr) return;
+        
+        const targetDate = new Date(targetStr).getTime();
+        
+        function updateTimer() {
+            const now = new Date().getTime();
+            const difference = targetDate - now;
+            
+            if (difference <= 0) {
+                countdownEl.textContent = "00:00:00";
+                clearInterval(timerInterval);
+                // Optionally reload to fetch live state
+                setTimeout(() => window.location.reload(), 2000);
+                return;
+            }
+            
+            const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+            
+            let displayStr = "";
+            if (days > 0) {
+                displayStr += `${days}d `;
+            }
+            
+            const hPad = String(hours).padStart(2, '0');
+            const mPad = String(minutes).padStart(2, '0');
+            const sPad = String(seconds).padStart(2, '0');
+            
+            displayStr += `${hPad}:${mPad}:${sPad}`;
+            countdownEl.textContent = displayStr;
+        }
+        
+        updateTimer();
+        const timerInterval = setInterval(updateTimer, 1000);
+    });
+</script>
+{% endblock %}

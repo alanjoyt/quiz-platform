@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+
+{% block title %}Login / Register — Cheranalloor Faces{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-top: 2rem;">
+    <!-- Tab Controls -->
+    <div class="login-tabs" style="display: flex; border-bottom: 1px solid var(--border-color); margin-bottom: 1.5rem;">
+        <button type="button" id="tab-login" class="tab-btn active" onclick="switchTab('login')" style="flex: 1; padding: 0.75rem; background: none; border: none; font-size: 1rem; font-weight: 600; cursor: pointer; color: var(--text-color); border-bottom: 2px solid var(--secondary-accent); font-family: var(--font-heading);">Sign In</button>
+        <button type="button" id="tab-register" class="tab-btn" onclick="switchTab('register')" style="flex: 1; padding: 0.75rem; background: none; border: none; font-size: 1rem; font-weight: 600; cursor: pointer; color: var(--text-muted); border-bottom: 2px solid transparent; font-family: var(--font-heading);">Register</button>
+    </div>
+
+    <form method="POST" action="{{ url_for('auth.login') }}" id="login-form">
+        <!-- Action Input -->
+        <input type="hidden" id="form-action" name="action" value="login">
+        <input type="hidden" id="device_lock_local" name="device_lock_local" value="">
+        <input type="hidden" id="browser_fingerprint" name="browser_fingerprint" value="">
+
+        <!-- Identity Field (Changes label and name dynamically) -->
+        <div class="form-group">
+            <label for="login-field-input" id="login-field-label" class="form-label">Username or Phone Number</label>
+            <input type="text" id="login-field-input" name="login_identity" class="form-control" 
+                   placeholder="Enter your username or phone number" required>
+        </div>
+
+        <!-- Register-only fields -->
+        <div id="register-only-fields" style="display: none;">
+            <div class="form-group">
+                <label for="email_or_phone" class="form-label">Phone Number</label>
+                <input type="text" id="email_or_phone" name="email_or_phone" class="form-control" 
+                       placeholder="9876543210">
+                <small style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 0.25rem;">
+                    Used to secure and identify your account.
+                </small>
+            </div>
+        </div>
+
+        <!-- PIN Field -->
+        <div class="form-group">
+            <label for="pin" class="form-label">PIN / Password (4+ digits)</label>
+            <input type="password" id="pin" name="pin" class="form-control" 
+                   placeholder="••••" required minlength="4" style="letter-spacing: 0.25rem;">
+            <small style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 0.25rem;">
+                Remember this PIN to log back in later.
+            </small>
+        </div>
+
+        <button type="submit" id="submit-btn" class="btn btn-primary" style="margin-top: 1rem;">
+            Sign In
+        </button>
+    </form>
+    
+    <div style="text-align: center; margin-top: 1.5rem; font-size: 0.85rem; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 1rem;">
+        For any INFO contact: <strong>Abel ~ 9497720048</strong>
+    </div>
+</div>
+
+<script>
+    function switchTab(tab) {
+        const tabLogin = document.getElementById('tab-login');
+        const tabRegister = document.getElementById('tab-register');
+        const registerFields = document.getElementById('register-only-fields');
+        const loginFieldLabel = document.getElementById('login-field-label');
+        const loginFieldInput = document.getElementById('login-field-input');
+        const submitBtn = document.getElementById('submit-btn');
+        const formAction = document.getElementById('form-action');
+
+        if (tab === 'login') {
+            tabLogin.classList.add('active');
+            tabLogin.style.color = 'var(--text-color)';
+            tabLogin.style.borderBottomColor = 'var(--secondary-accent)';
+            
+            tabRegister.classList.remove('active');
+            tabRegister.style.color = 'var(--text-muted)';
+            tabRegister.style.borderBottomColor = 'transparent';
+            
+            registerFields.style.display = 'none';
+            document.getElementById('email_or_phone').required = false;
+            
+            loginFieldLabel.textContent = "Username or Phone Number";
+            loginFieldInput.placeholder = "Enter your username or phone number";
+            loginFieldInput.name = "login_identity";
+            
+            submitBtn.textContent = "Sign In";
+            formAction.value = "login";
+        } else {
+            tabRegister.classList.add('active');
+            tabRegister.style.color = 'var(--text-color)';
+            tabRegister.style.borderBottomColor = 'var(--secondary-accent)';
+            
+            tabLogin.classList.remove('active');
+            tabLogin.style.color = 'var(--text-muted)';
+            tabLogin.style.borderBottomColor = 'transparent';
+            
+            registerFields.style.display = 'block';
+            document.getElementById('email_or_phone').required = true;
+            
+            loginFieldLabel.textContent = "Choose Username";
+            loginFieldInput.placeholder = "Enter a public username";
+            loginFieldInput.name = "username";
+            
+            submitBtn.textContent = "Create Account & Sign In";
+            formAction.value = "register";
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        // Compute browser fingerprint
+        const fpInput = document.getElementById('browser_fingerprint');
+        if (fpInput) {
+            fpInput.value = getBrowserFingerprint();
+        }
+
+        // Safe storage getter
+        const getStoredItem = (key) => {
+            try { return localStorage.getItem(key); } catch (e) { return null; }
+        };
+
+        const localVal = getStoredItem('device_lock_username');
+        if (localVal) {
+            const inputEl = document.getElementById('device_lock_local');
+            if (inputEl) {
+                inputEl.value = localVal;
+            }
+        }
+
+        // Determine default tab based on whether they have visited/registered before
+        const hasAccount = getStoredItem('has_account') || document.cookie.includes('has_account=true');
+        const hasError = document.querySelector('.alert') !== null;
+        let targetAction = document.getElementById('form-action').value;
+        
+        const isDev = {% if is_dev %}true{% else %}false{% endif %};
+        
+        if (!hasError) {
+            if (isDev) {
+                targetAction = 'register';
+            } else {
+                targetAction = hasAccount ? 'login' : 'register';
+            }
+        }
+        
+        // Respect explicit action in query parameter if present
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('action')) {
+            targetAction = urlParams.get('action');
+        }
+        
+        switchTab(targetAction);
+    });
+
+    function getBrowserFingerprint() {
+        try {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return 'no-canvas';
+            
+            canvas.width = 200;
+            canvas.height = 50;
+            ctx.textBaseline = "top";
+            ctx.font = "14px 'Arial', sans-serif";
+            ctx.textBaseline = "alphabetic";
+            ctx.fillStyle = "#f60";
+            ctx.fillRect(125,1,62,20);
+            ctx.fillStyle = "#069";
+            ctx.fillText("CheranalloorFacesQuiz_192b*", 2, 15);
+            ctx.fillStyle = "rgba(102, 204, 0, 0.7)";
+            ctx.fillText("CheranalloorFacesQuiz_192b*", 4, 17);
+            
+            // Check if context readback is blocked or returns completely blank/transparent canvas
+            try {
+                const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                let isBlank = true;
+                for (let i = 0; i < imgData.data.length; i += 4) {
+                    if (imgData.data[i+3] !== 0) { // Alpha is non-zero
+                        isBlank = false;
+                        break;
+                    }
+                }
+                if (isBlank) return 'blank-canvas';
+            } catch (err) {
+                // If getImageData is blocked or throws under strict security settings
+                return 'blank-canvas';
+            }
+            
+            const dataUrl = canvas.toDataURL();
+            let hash = 0;
+            if (dataUrl.length === 0) return 'empty';
+            for (let i = 0; i < dataUrl.length; i++) {
+                const char = dataUrl.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            return 'fp_' + Math.abs(hash).toString(16);
+        } catch (e) {
+            return 'error_' + e.message.substring(0, 10);
+        }
+    }
+</script>
+{% endblock %}

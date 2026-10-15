@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard — Cheranalloor Faces{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-top: 1rem;">
+    <h2 class="card-title" style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1rem;">
+        Admin Control Panel
+    </h2>
+
+    <!-- Admin Navigation Links -->
+    <div class="admin-nav">
+        <a href="{{ url_for('admin.dashboard') }}" class="active">Overview & Config</a>
+        <a href="{{ url_for('admin.questions') }}">Questions CRUD</a>
+        <a href="{{ url_for('admin.users') }}">Participants</a>
+        <a href="{{ url_for('admin.export_leaderboard') }}" style="color: var(--primary-accent);">📥 Export CSV</a>
+    </div>
+
+    <!-- Quick Stats Grid -->
+    <h3 class="card-title" style="font-size: 1.1rem; margin-bottom: 1rem;">Real-time Statistics</h3>
+    <div class="admin-grid" style="margin-bottom: 2rem;">
+        <div class="profile-stat-box admin-stat-card">
+            <span class="profile-stat-label">Total Users / Verified</span>
+            <div class="admin-stat-number">{{ total_users }} <span style="font-size: 1.25rem; font-weight:500; color:var(--text-muted);">/ {{ verified_users }}</span></div>
+        </div>
+        <div class="profile-stat-box admin-stat-card">
+            <span class="profile-stat-label">Quiz Active / Completed</span>
+            <div class="admin-stat-number">{{ active_takers }} <span style="font-size: 1.25rem; font-weight:500; color:var(--text-muted);">/ {{ completed_takers }}</span></div>
+        </div>
+        <div class="profile-stat-box admin-stat-card">
+            <span class="profile-stat-label">Disqualified Takers</span>
+            <div class="admin-stat-number" style="color: var(--error-color);">{{ disqualified_takers }}</div>
+        </div>
+        <div class="profile-stat-box admin-stat-card">
+            <span class="profile-stat-label">Total Questions</span>
+            <div class="admin-stat-number">{{ questions_count }}</div>
+        </div>
+    </div>
+
+    <!-- Quiz Configurations Form -->
+    <h3 class="card-title" style="font-size: 1.1rem; margin-bottom: 1rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+        Quiz Phase & Timing Controls
+    </h3>
+
+    <form method="POST" action="{{ url_for('admin.dashboard') }}">
+        <!-- Quiz State -->
+        <div class="form-group">
+            <label for="quiz_state" class="form-label">Quiz Status State</label>
+            <select id="quiz_state" name="quiz_state" class="form-control" required>
+                <option value="inactive" {% if settings.state == 'inactive' %}selected{% endif %}>Inactive (Closed)</option>
+                <option value="registration" {% if settings.state == 'registration' %}selected{% endif %}>Registration (Countdown Open)</option>
+                <option value="live" {% if settings.state == 'live' %}selected{% endif %}>Live (Quiz Session Active)</option>
+                <option value="ended" {% if settings.state == 'ended' %}selected{% endif %}>Ended (Submissions Closed, Leaderboard Viewable)</option>
+            </select>
+        </div>
+
+        <!-- Start Time -->
+        <div class="form-group">
+            <label for="quiz_start_time" class="form-label">Quiz Start Date & Time (ISO/Local Format)</label>
+            <input type="datetime-local" id="quiz_start_time" name="quiz_start_time" class="form-control" 
+                   value="{{ start_time_val }}">
+            <small style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 0.25rem;">
+                Used for countdown displays during the registration phase. (Format: YYYY-MM-DDTHH:MM)
+            </small>
+        </div>
+
+        <!-- Duration Mins -->
+        <div class="form-group">
+            <label for="quiz_duration_mins" class="form-label">Quiz Expected Duration (minutes)</label>
+            <input type="number" id="quiz_duration_mins" name="quiz_duration_mins" class="form-control" 
+                   value="{{ settings.duration_mins }}" min="1" required>
+        </div>
+
+        <!-- Time Limit per question -->
+        <div class="form-group">
+            <label for="question_time_limit" class="form-label">Per-Question Time Limit (seconds)</label>
+            <input type="number" id="question_time_limit" name="question_time_limit" class="form-control" 
+                   value="{{ settings.time_limit_sec }}" min="5" required>
+            <small style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 0.25rem;">
+                Determines the ticking countdown and the speed bonus points calculation.
+            </small>
+        </div>
+
+        <button type="submit" class="btn btn-secondary" style="margin-top: 1rem;">
+            Save Configurations
+        </button>
+    </form>
+</div>
+{% endblock %}

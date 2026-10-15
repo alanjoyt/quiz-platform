@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block title %}Your Profile — Cheranalloor Faces{% endblock %}
+
+{% block content %}
+{% if state and state.quiz_completed_at %}
+    <!-- Premium Glassmorphic Celebration Card -->
+    <div class="celebration-card" style="margin-top: 1rem;">
+        <div class="aurora-backdrop"></div>
+        <div class="sparkle-container">
+            <div class="sparkle" style="left: 10%; width: 8px; height: 8px; animation-delay: 0s; animation-duration: 6s;"></div>
+            <div class="sparkle" style="left: 25%; width: 12px; height: 12px; animation-delay: 1.5s; animation-duration: 8s;"></div>
+            <div class="sparkle" style="left: 45%; width: 6px; height: 6px; animation-delay: 3s; animation-duration: 5s;"></div>
+            <div class="sparkle" style="left: 60%; width: 14px; height: 14px; animation-delay: 0.5s; animation-duration: 9s;"></div>
+            <div class="sparkle" style="left: 80%; width: 10px; height: 10px; animation-delay: 4s; animation-duration: 7s;"></div>
+            <div class="sparkle" style="left: 90%; width: 8px; height: 8px; animation-delay: 2s; animation-duration: 6s;"></div>
+        </div>
+
+        <div class="insta-ring">
+            <div class="insta-ring-inner">
+                <img src="{{ url_for('static', filename='images/cheranalloor_faces_profile.jpg') }}" alt="Cheranalloor Faces Profile">
+            </div>
+        </div>
+
+        <h2 style="font-family: var(--font-heading); font-size: 1.45rem; font-weight: 800; margin-bottom: 0.5rem; color: var(--text-color);">
+            Quiz Completed! 🎉
+        </h2>
+        <p style="font-size: 0.95rem; color: var(--text-muted); max-width: 450px; margin: 0 auto 1.5rem auto; line-height: 1.5;">
+            Awesome job! You finished with a score of <strong>{{ current_user.total_score }} points</strong>.<br>
+            Please visit our official Instagram page below to view status updates and final standings.
+        </p>
+
+        <!-- Polaroid Reveal Frame -->
+        <div class="polaroid-container">
+            <a href="https://www.instagram.com/cheranalloor_faces?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener noreferrer" style="display: inline-block;">
+                <div class="polaroid-frame">
+                    <img src="{{ url_for('static', filename='images/cheranalloor_faces_profile.jpg') }}" alt="Cheranalloor Faces" class="polaroid-image">
+                    <div class="polaroid-caption">CHERANALLOOR FACES</div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Interactive CTA Button -->
+        <a href="https://www.instagram.com/cheranalloor_faces?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener noreferrer" class="btn btn-instagram">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" style="vertical-align: middle;"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
+            <span>Visit Instagram Profile</span>
+        </a>
+    </div>
+{% endif %}
+
+<!-- Profile Overview Card -->
+<div class="card" style="margin-top: 1rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 class="card-title" style="margin-bottom: 0;">competitor Profile</h2>
+        <span style="font-size: 0.8rem; background-color: var(--secondary-accent); color: #FAF6F0; padding: 0.25rem 0.75rem; border-radius: 50px; font-weight: 600;">
+            {% if state and state.is_disqualified %}
+                Disqualified
+            {% elif state and state.quiz_completed_at %}
+                Quiz Completed
+            {% elif state %}
+                In Progress
+            {% else %}
+                Registered
+            {% endif %}
+        </span>
+    </div>
+
+    <div style="margin-bottom: 1.5rem;">
+        <p style="font-size: 0.9rem; color: var(--text-muted);">Username</p>
+        <p style="font-size: 1.15rem; font-weight: 700; color: var(--text-color); margin-bottom: 0.75rem;">
+            {{ current_user.username }}
+        </p>
+
+        {% if '@phone.cheranalloorfaces.com' in current_user.email %}
+            <p style="font-size: 0.9rem; color: var(--text-muted);">Phone Number</p>
+            <p style="font-size: 1rem; font-weight: 600; color: var(--text-color);">
+                {{ current_user.email | replace('@phone.cheranalloorfaces.com', '') }}
+            </p>
+        {% else %}
+            <p style="font-size: 0.9rem; color: var(--text-muted);">Email Address</p>
+            <p style="font-size: 1rem; font-weight: 600; color: var(--text-color);">
+                {{ current_user.email }}
+            </p>
+        {% endif %}
+
+        <div style="margin-top: 1.5rem;">
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-outline" style="min-height: 40px; font-size: 0.9rem; border-color: var(--error-color); color: var(--error-color); width: auto; padding: 0.5rem 1.5rem; display: inline-flex; align-items: center; justify-content: center;">
+                Logout
+            </a>
+        </div>
+    </div>
+
+    <!-- Warning status if any -->
+    {% if state and state.warnings_count > 0 %}
+        <div class="alert alert-warning" style="margin-bottom: 0;">
+            ⚠️ <strong>Anti-Cheat Notice:</strong> You accumulated <strong>{{ state.warnings_count }}</strong> out of 3 maximum warnings for tab switching during the quiz.
+        </div>
+    {% endif %}
+</div>
+
+<!-- Performance Summary -->
+<div class="card">
+    <h3 class="card-title">Quiz Performance</h3>
+    
+    <div class="profile-stats">
+        <div class="profile-stat-box">
+            <span class="profile-stat-label">Total Score</span>
+            <span class="profile-stat-value" style="color: var(--primary-accent);">
+                {{ current_user.total_score }} pts
+            </span>
+        </div>
+        <div class="profile-stat-box">
+            <span class="profile-stat-label">Completion Status</span>
+            <span class="profile-stat-value" style="color: var(--secondary-accent); font-size: 1.15rem; padding-top: 0.35rem; display: block; font-weight: 700;">
+                {% if state and state.is_disqualified %}
+                    Disqualified
+                {% elif state and state.quiz_completed_at %}
+                    Completed
+                {% elif state %}
+                    Active
+                {% else %}
+                    Not Started
+                {% endif %}
+            </span>
+        </div>
+    </div>
+
+    <div style="display: flex; justify-content: space-around; padding-top: 0.5rem; border-top: 1px solid var(--border-color); font-size: 0.9rem;">
+        <div>
+            <span style="color: var(--text-muted);">Base Score:</span> 
+            <strong>{{ current_user.base_score }}</strong>
+        </div>
+        <div>
+            <span style="color: var(--text-muted);">Speed Bonus:</span> 
+            <strong>{{ current_user.speed_bonus_score }}</strong>
+        </div>
+    </div>
+</div>
+
+<!-- Submission History -->
+<div class="card">
+    <h3 class="card-title" style="margin-bottom: 1.25rem;">Response Log</h3>
+    
+    {% if history %}
+        <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+            {% for item in history %}
+                <div class="history-item">
+                    <div class="history-header">
+                        <strong style="color: var(--text-color); font-size: 0.95rem;">Question {{ loop.index }}</strong>
+                        <span class="history-result-badge {% if item.is_correct %}badge-correct{% else %}badge-incorrect{% endif %}">
+                            {% if item.is_correct %}Correct{% else %}Incorrect / Timeout{% endif %}
+                        </span>
+                    </div>
+                    
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin: 0.25rem 0 0.5rem 0; line-height: 1.4;">
+                        {{ item.question_text }}
+                    </p>
+                    
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; background-color: var(--bg-color); padding: 0.4rem; border-radius: var(--border-radius-sm); border: 1px solid var(--border-color);">
+                        <div>Selected: <strong>{{ item.selected or 'None (Timeout)' }}</strong></div>
+                        <div>Correct: <strong>{{ item.correct }}</strong></div>
+                        <div>Time Spent: <strong>{{ item.time_spent }}s</strong></div>
+                        <div>Points: <strong>+{{ item.points + item.bonus }}</strong></div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p style="text-align: center; color: var(--text-muted); font-size: 0.9rem; padding: 1.5rem 0;">
+            No answers submitted yet. Your history will appear here once you take the live quiz.
+        </p>
+    {% endif %}
+</div>
+{% endblock %}

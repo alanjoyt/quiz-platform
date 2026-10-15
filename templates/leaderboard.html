@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}Leaderboard — Cheranalloor Faces{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.5rem;">
+        <h2 class="card-title" style="margin-bottom: 0;">Live Leaderboard</h2>
+        <span style="font-size: 0.75rem; background-color: rgba(15, 82, 87, 0.1); color: var(--secondary-accent); padding: 0.25rem 0.5rem; border-radius: 50px; font-weight: 600;">
+            Auto-refreshing in <span id="refresh-timer">15</span>s
+        </span>
+    </div>
+
+    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.5rem;">
+        Ranking is based on highest scores. In case of a tie, the user who finished the quiz earlier is ranked higher. No private user information is displayed.
+    </p>
+
+    <div class="table-responsive">
+        <table class="leaderboard-table">
+            <thead>
+                <tr>
+                    <th style="width: 60px; text-align: center;">Rank</th>
+                    <th>Competitor</th>
+                    <th style="text-align: right;">Total Score</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if leaderboard %}
+                    {% for entry in leaderboard %}
+                        <tr class="{% if current_user.is_authenticated and current_user.id == entry.id %}leaderboard-row-self{% endif %}">
+                            <td style="text-align: center; vertical-align: middle;">
+                                {% if loop.index == 1 %}
+                                    <span class="rank-badge rank-1">1</span>
+                                {% elif loop.index == 2 %}
+                                    <span class="rank-badge rank-2">2</span>
+                                {% elif loop.index == 3 %}
+                                    <span class="rank-badge rank-3">3</span>
+                                {% else %}
+                                    <span style="font-weight: 600; color: var(--text-muted);">{{ loop.index }}</span>
+                                {% endif %}
+                            </td>
+                            <td style="vertical-align: middle;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <span>{{ entry.username }}</span>
+                                    {% if current_user.is_authenticated and current_user.id == entry.id %}
+                                        <span style="font-size: 0.65rem; background-color: var(--primary-accent); color: #FAF6F0; padding: 0.05rem 0.3rem; border-radius: 4px; font-weight: 700;">YOU</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td style="text-align: right; vertical-align: middle;" class="score-badge">
+                                {{ entry.score }} pts
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="3" style="text-align: center; color: var(--text-muted); padding: 2rem 0;">
+                            No scores recorded yet. The leaderboard will populate when the quiz competition is live.
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        let refreshSeconds = 15;
+        const timerEl = document.getElementById('refresh-timer');
+        
+        const timerInterval = setInterval(() => {
+            refreshSeconds--;
+            if (timerEl) timerEl.textContent = refreshSeconds;
+            
+            if (refreshSeconds <= 0) {
+                clearInterval(timerInterval);
+                window.location.reload();
+            }
+        }, 1000);
+    });
+</script>
+{% endblock %}

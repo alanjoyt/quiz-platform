@@ -1,0 +1,25 @@
+# Environment variables & secrets
+.env
+config.php
+
+# Python cache & virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.venv/
+
+# Instance & SQLite databases
+instance/*.db
+instance/
+*.sqlite3
+
+# Lock files & temp files
+*.lock
+
+# OS and Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

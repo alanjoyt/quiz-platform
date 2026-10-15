@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block title %}Quiz Competition — Cheranalloor Faces{% endblock %}
+
+{% block content %}
+<div class="main-content">
+
+    <!-- Case 1: Quiz Not Live or Error State -->
+    {% if error_state %}
+        <div class="card" style="text-align: center; margin-top: 2rem;">
+            <h2 class="card-title" style="color: var(--warning-color);">Quiz Room</h2>
+            {% if error_state == 'inactive' %}
+                <p style="margin: 1rem 0 1.5rem 0;">The quiz competition is currently closed/inactive.</p>
+            {% elif error_state == 'registration' %}
+                <p style="margin: 1rem 0 1.5rem 0;">The quiz hasn't started yet! We are currently in the registration phase.</p>
+                {% if quiz_settings.start_time %}
+                    <p style="font-size: 0.9rem; color: var(--text-muted);">Scheduled Start: {{ quiz_settings.start_time | datetimeformat }}</p>
+                {% endif %}
+            {% elif error_state == 'ended' %}
+                <p style="margin: 1rem 0 1.5rem 0;">The quiz competition has ended. Thank you for participating!</p>
+            {% endif %}
+            <a href="{{ url_for('index') }}" class="btn btn-primary">Return Home</a>
+        </div>
+
+    <!-- Case 2: User is Disqualified -->
+    {% elif disqualified %}
+        <div class="card" style="text-align: center; border-color: var(--error-color); margin-top: 2rem;">
+            <h2 class="card-title" style="color: var(--error-color);">Disqualified</h2>
+            <div class="alert alert-error" style="text-align: left; margin: 1rem 0;">
+                <strong>Reason:</strong> {{ reason or 'Violation of quiz rules.' }}
+            </div>
+            <p style="margin-bottom: 1.5rem; font-size: 0.95rem; color: var(--text-muted);">
+                Our anti-cheat system detected tab switching or page exits. In accordance with competition rules, you have been disqualified from this session.
+            </p>
+            <a href="{{ url_for('index') }}" class="btn btn-outline">Back to Home</a>
+        </div>
+
+    <!-- Case 3: Active Question Display -->
+    {% else %}
+        <!-- Progress bar and timer header -->
+        <div class="quiz-header">
+            <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted);">
+                QUESTION {{ answered_count + 1 }}
+            </span>
+            
+            <div class="quiz-timer-container">
+                <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">TIME LEFT:</span>
+                <span id="quiz-timer" data-remaining="{{ remaining_seconds }}">{{ remaining_seconds }}</span>s
+            </div>
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-bar" style="width: {{ progress_percent }}%;"></div>
+        </div>
+
+        <!-- Question Card -->
+        <div class="card" style="margin-bottom: 1rem;">
+            <p style="font-size: 1.15rem; font-weight: 600; line-height: 1.5;">
+                {{ question.text }}
+            </p>
+        </div>
+
+        <!-- Form for submission -->
+        <form id="quiz-form" method="POST" action="{{ url_for('quiz_view') }}">
+            <input type="hidden" name="question_id" value="{{ question.id }}">
+            
+            <div class="options-list">
+                <!-- Option A -->
+                <div class="option-item">
+                    <input type="radio" id="option_a" name="option" value="A" class="option-input" required>
+                    <label for="option_a" class="option-label">
+                        <span class="option-letter">A</span>
+                        <span>{{ question.option_a }}</span>
+                    </label>
+                </div>
+                
+                <!-- Option B -->
+                <div class="option-item">
+                    <input type="radio" id="option_b" name="option" value="B" class="option-input" required>
+                    <label for="option_b" class="option-label">
+                        <span class="option-letter">B</span>
+                        <span>{{ question.option_b }}</span>
+                    </label>
+                </div>
+                
+                <!-- Option C -->
+                <div class="option-item">
+                    <input type="radio" id="option_c" name="option" value="C" class="option-input" required>
+                    <label for="option_c" class="option-label">
+                        <span class="option-letter">C</span>
+                        <span>{{ question.option_c }}</span>
+                    </label>
+                </div>
+                
+                <!-- Option D -->
+                <div class="option-item">
+                    <input type="radio" id="option_d" name="option" value="D" class="option-input" required>
+                    <label for="option_d" class="option-label">
+                        <span class="option-letter">D</span>
+                        <span>{{ question.option_d }}</span>
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-secondary" style="margin-top: 1rem;">
+                Submit Answer
+            </button>
+        </form>
+
+        <p style="font-size: 0.75rem; text-align: center; color: var(--text-muted); margin-top: 1.5rem;">
+            ⚠️ Do not switch tabs, minimize the browser, or exit the page. Your activity is being monitored.
+        </p>
+
+        <!-- Warnings Indicator (Small HUD element) -->
+        {% if warnings_count > 0 %}
+            <div class="alert alert-warning" style="margin-top: 1.5rem; text-align: center; font-size: 0.8rem;">
+                ⚠️ <strong>Warning:</strong> Tab switching detected. Warning Count: {{ warnings_count }}/3
+            </div>
+        {% endif %}
+    {% endif %}
+
+</div>
+
+<!-- Anti-Cheat Overlay warning modal (Hidden by default) -->
+<div id="warning-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <h3 class="modal-title">Tab Switch Detected!</h3>
+        <p style="margin: 1rem 0; font-size: 0.95rem;">
+            You switched tabs or left the quiz screen. This is considered a rules violation.
+        </p>
+        <div class="alert alert-warning" style="margin-bottom: 1.5rem;">
+            Warnings: <strong id="modal-warning-count">0</strong> / 3
+        </div>
+        <p style="margin-bottom: 1.5rem; font-size: 0.85rem; color: var(--text-muted);">
+            If you reach 3 warnings, you will be automatically disqualified from the quiz.
+        </p>
+        <button id="close-warning-btn" class="btn btn-primary" style="min-height: 40px; font-size: 0.9rem;">
+            I Understand & Will Resume
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('static', filename='js/quiz.js') }}"></script>
+{% endblock %}
