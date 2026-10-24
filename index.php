@@ -168,7 +168,7 @@ $extraScripts = '
                 splash.style.display = "none";
             } else {
                 const typingText = document.getElementById("splash-typing-text");
-                const phrase = "developed by nexyra solutions";
+                const phrase = "developed by BOLDBYTE solutions";
                 let index = 0;
                 
                 function typeEffect() {
